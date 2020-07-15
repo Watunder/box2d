@@ -23,10 +23,8 @@
 #ifndef B2_MATH_H
 #define B2_MATH_H
 
-#include <math.h>
-
-#include "b2_api.h"
 #include "b2_settings.h"
+#include <math.h>
 
 /// This function is used to ensure that a floating point number is not a NaN or infinity.
 inline bool b2IsValid(float x)
@@ -71,7 +69,7 @@ struct B2_API b2Vec2
 
 	/// Negate this vector.
 	b2Vec2 operator -() const { b2Vec2 v; v.Set(-x, -y); return v; }
-
+	
 	/// Read from and indexed element.
 	float operator () (int32 i) const
 	{
@@ -89,7 +87,7 @@ struct B2_API b2Vec2
 	{
 		x += v.x; y += v.y;
 	}
-
+	
 	/// Subtract a vector from this vector.
 	void operator -= (const b2Vec2& v)
 	{
@@ -145,7 +143,31 @@ struct B2_API b2Vec2
 	float x, y;
 };
 
-/// A 2D column vector with 3 elements.
+/// Add a float to a vector.
+inline b2Vec2 operator + (const b2Vec2& v, float f)
+{
+	return b2Vec2(v.x + f, v.y + f);
+}
+
+/// Substract a float from a vector.
+inline b2Vec2 operator - (const b2Vec2& v, float f)
+{
+	return b2Vec2(v.x - f, v.y - f);
+}
+
+/// Multiply a float with a vector.
+inline b2Vec2 operator * (const b2Vec2& v, float f)
+{
+	return b2Vec2(v.x * f, v.y * f);
+}
+
+/// Divide a vector by a float.
+inline b2Vec2 operator / (const b2Vec2& v, float f)
+{
+	return b2Vec2(v.x / f, v.y / f);
+}
+
+/// A 3D column vector with 3 elements.
 struct B2_API b2Vec3
 {
 	/// Default constructor does nothing (for performance).
@@ -207,7 +229,7 @@ struct B2_API b2Vec3
 };
 
 /// A 4D column vector with 4 elements.
-struct b2Vec4
+struct B2_API b2Vec4
 {
 	/// Default constructor does nothing (for performance).
 	b2Vec4() {}
@@ -733,11 +755,10 @@ inline bool b2IsPowerOfTwo(uint32 x)
 	return result;
 }
 
-// https://fgiesen.wordpress.com/2012/08/15/linear-interpolation-past-present-and-future/
 inline void b2Sweep::GetTransform(b2Transform* xf, float beta) const
 {
-	xf->p = (1.0f - beta) * c0 + beta * c;
-	float angle = (1.0f - beta) * a0 + beta * a;
+	xf->p = c0 + beta * (c - c0);
+	float angle = a0 + beta * (a - a0);
 	xf->q.Set(angle);
 
 	// Shift to origin
