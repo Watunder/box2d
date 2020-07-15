@@ -133,8 +133,20 @@ bool b2ChainShape::TestPoint(const b2Transform& xf, const b2Vec2& p) const
 	return false;
 }
 
+void b2ChainShape::ComputeDistance(
+	const b2Transform& xf,
+	const b2Vec2& p,
+	float* distance,
+	b2Vec2* normal,
+	int32 childIndex) const
+{
+	b2EdgeShape edge;
+	GetChildEdge(&edge, childIndex);
+	edge.ComputeDistance(xf, p, distance, normal, 0);
+}
+
 bool b2ChainShape::RayCast(b2RayCastOutput* output, const b2RayCastInput& input,
-							const b2Transform& xf, int32 childIndex) const
+                           const b2Transform& xf, int32 childIndex) const
 {
 	b2Assert(childIndex < m_count);
 

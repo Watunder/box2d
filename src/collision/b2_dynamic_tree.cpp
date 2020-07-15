@@ -613,8 +613,10 @@ void b2DynamicTree::ValidateStructure(int32 index) const
 
 	const b2TreeNode* node = m_nodes + index;
 
+#if B2_ASSERT_ENABLED || DEBUG
 	int32 child1 = node->child1;
 	int32 child2 = node->child2;
+#endif  // B2_ASSERT_ENABLED || DEBUG
 
 	if (node->IsLeaf())
 	{
@@ -630,8 +632,8 @@ void b2DynamicTree::ValidateStructure(int32 index) const
 	b2Assert(m_nodes[child1].parent == index);
 	b2Assert(m_nodes[child2].parent == index);
 
-	ValidateStructure(child1);
-	ValidateStructure(child2);
+	B2_DEBUG_STATEMENT(ValidateStructure(child1));
+	B2_DEBUG_STATEMENT(ValidateStructure(child2));
 }
 
 void b2DynamicTree::ValidateMetrics(int32 index) const
@@ -657,11 +659,13 @@ void b2DynamicTree::ValidateMetrics(int32 index) const
 	b2Assert(0 <= child1 && child1 < m_nodeCapacity);
 	b2Assert(0 <= child2 && child2 < m_nodeCapacity);
 
+#if B2_ASSERT_ENABLED
 	int32 height1 = m_nodes[child1].height;
 	int32 height2 = m_nodes[child2].height;
 	int32 height;
 	height = 1 + b2Max(height1, height2);
 	b2Assert(node->height == height);
+#endif // B2_ASSERT_ENABLE
 
 	b2AABB aabb;
 	aabb.Combine(m_nodes[child1].aabb, m_nodes[child2].aabb);

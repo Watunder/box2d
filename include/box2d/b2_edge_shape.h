@@ -51,6 +51,9 @@ public:
 	/// @see b2Shape::TestPoint
 	bool TestPoint(const b2Transform& transform, const b2Vec2& p) const override;
 
+	// @see b2Shape::ComputeDistance
+	void ComputeDistance(const b2Transform& transform, const b2Vec2& p, float* distance, b2Vec2* normal, int32 childIndex) const override;
+
 	/// Implement b2Shape.
 	bool RayCast(b2RayCastOutput* output, const b2RayCastInput& input,
 				const b2Transform& transform, int32 childIndex) const override;

@@ -24,6 +24,7 @@
 #define B2_DRAW_H
 
 #include "b2_math.h"
+#include "b2_particle.h"
 
 /// Color for debug drawing. Each value has the range [0,1].
 struct b2Color
@@ -57,7 +58,8 @@ public:
 		e_jointBit				= 0x0002,	///< draw joint connections
 		e_aabbBit				= 0x0004,	///< draw axis aligned bounding boxes
 		e_pairBit				= 0x0008,	///< draw broad-phase pairs
-		e_centerOfMassBit		= 0x0010	///< draw center of mass frame
+		e_centerOfMassBit			= 0x0010,	///< draw center of mass frame
+		e_particleBit				= 0x0020  ///< draw particles
 	};
 
 	/// Set the drawing flags.
@@ -65,7 +67,7 @@ public:
 
 	/// Get the drawing flags.
 	uint32 GetFlags() const;
-	
+
 	/// Append flags to the current flags.
 	void AppendFlags(uint32 flags);
 
@@ -83,7 +85,10 @@ public:
 	
 	/// Draw a solid circle.
 	virtual void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) = 0;
-	
+
+	/// Draw a particle array
+	virtual void DrawParticles(const b2Vec2 *centers, float radius, const b2ParticleColor *colors, int32 count) = 0;
+
 	/// Draw a line segment.
 	virtual void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) = 0;
 

@@ -50,6 +50,7 @@ struct Settings
 		m_enableWarmStarting = true;
 		m_enableContinuous = true;
 		m_enableSubStepping = false;
+		m_strictContacts = false;
 		m_enableSleep = true;
 		m_pause = false;
 		m_singleStep = false;
@@ -77,6 +78,7 @@ struct Settings
 	bool m_enableWarmStarting;
 	bool m_enableContinuous;
 	bool m_enableSubStepping;
+	bool m_strictContacts;
 	bool m_enableSleep;
 	bool m_pause;
 	bool m_singleStep;
