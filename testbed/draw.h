@@ -75,6 +75,8 @@ public:
 
 	void DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2& axis, const b2Color& color) override;
 
+	void DrawParticles(const b2Vec2* centers, float radius, const b2ParticleColor* colors, int32 count) override;
+
 	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color) override;
 
 	void DrawTransform(const b2Transform& xf) override;

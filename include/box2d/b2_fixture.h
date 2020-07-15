@@ -162,6 +162,10 @@ public:
 	/// @param p a point in world coordinates.
 	bool TestPoint(const b2Vec2& p) const;
 
+	/// Compute the distance from this fixture.
+	/// @param p a point in world coordinates.
+	void ComputeDistance(const b2Vec2& p, float* distance, b2Vec2* normal, int32 childIndex) const;
+
 	/// Cast a ray against this shape.
 	/// @param output the ray-cast results.
 	/// @param input the ray-cast input parameters.
@@ -344,6 +348,11 @@ inline void b2Fixture::SetRestitutionThreshold(float threshold)
 inline bool b2Fixture::TestPoint(const b2Vec2& p) const
 {
 	return m_shape->TestPoint(m_body->GetTransform(), p);
+}
+
+inline void b2Fixture::ComputeDistance(const b2Vec2& p, float* d, b2Vec2* n, int32 childIndex) const
+{
+	m_shape->ComputeDistance(m_body->GetTransform(), p, d, n, childIndex);
 }
 
 inline bool b2Fixture::RayCast(b2RayCastOutput* output, const b2RayCastInput& input, int32 childIndex) const

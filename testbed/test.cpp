@@ -38,9 +38,11 @@ void DestructionListener::SayGoodbye(b2Joint* joint)
 
 Test::Test()
 {
+	const b2ParticleSystemDef particleSystemDef;
 	b2Vec2 gravity;
 	gravity.Set(0.0f, -10.0f);
 	m_world = new b2World(gravity);
+	m_particleSystem = m_world->CreateParticleSystem(&particleSystemDef);
 	m_bomb = NULL;
 	m_textLine = 30;
 	m_textIncrement = 13;
@@ -51,8 +53,12 @@ Test::Test()
 	m_world->SetDestructionListener(&m_destructionListener);
 	m_world->SetContactListener(this);
 	m_world->SetDebugDraw(&g_debugDraw);
+
+	m_particleSystem->SetGravityScale(0.4f);
+	m_particleSystem->SetDensity(1.2f);
 	
 	m_bombSpawning = false;
+	m_mouseTracing = false;
 
 	m_stepCount = 0;
 
@@ -141,9 +147,49 @@ public:
 	b2Fixture* m_fixture;
 };
 
+class QueryCallbackParticles : public b2QueryCallback
+{
+public:
+	QueryCallbackParticles(b2ParticleSystem* particleSystem,
+		const b2Shape* shape, const b2Vec2& velocity)
+	{
+		m_particleSystem = particleSystem;
+		m_shape = shape;
+		m_velocity = velocity;
+	}
+
+	bool ReportFixture(b2Fixture* fixture)
+	{
+		B2_NOT_USED(fixture);
+		return false;
+	}
+
+	bool ReportParticle(const b2ParticleSystem* particleSystem, int32 index)
+	{
+		if (particleSystem != m_particleSystem)
+			return false;
+
+		b2Transform xf;
+		xf.SetIdentity();
+		b2Vec2 p = m_particleSystem->GetPositionBuffer()[index];
+		if (m_shape->TestPoint(xf, p))
+		{
+			b2Vec2& v = m_particleSystem->GetVelocityBuffer()[index];
+			v = m_velocity;
+		}
+		return true;
+	}
+
+	b2ParticleSystem* m_particleSystem;
+	const b2Shape* m_shape;
+	b2Vec2 m_velocity;
+};
+
 void Test::MouseDown(const b2Vec2& p)
 {
 	m_mouseWorld = p;
+
+	m_mouseDown = true;
 	
 	if (m_mouseJoint != NULL)
 	{
@@ -199,6 +245,28 @@ void Test::CompleteBombSpawn(const b2Vec2& p)
 	m_bombSpawning = false;
 }
 
+void Test::ColorParticleGroup(b2ParticleGroup* const group, uint32 particlesPerColor)
+{
+	b2Assert(group);
+	b2ParticleColor* const colorBuffer = m_particleSystem->GetColorBuffer();
+	const int32 particleCount = group->GetParticleCount();
+	const int32 groupStart = group->GetBufferIndex();
+	const int32 groupEnd = particleCount + groupStart;
+	const int32 colorCount = (int32)k_ParticleColorsCount;
+	if (!particlesPerColor)
+	{
+		particlesPerColor = particleCount / colorCount;
+		if (!particlesPerColor)
+		{
+			particlesPerColor = 1;
+		}
+	}
+	for (int32 i = groupStart; i < groupEnd; i++)
+	{
+		colorBuffer[i] = k_ParticleColors[i / particlesPerColor];
+	}
+}
+
 void Test::ShiftMouseDown(const b2Vec2& p)
 {
 	m_mouseWorld = p;
@@ -213,6 +281,8 @@ void Test::ShiftMouseDown(const b2Vec2& p)
 
 void Test::MouseUp(const b2Vec2& p)
 {
+	m_mouseDown = false;
+	
 	if (m_mouseJoint)
 	{
 		m_world->DestroyJoint(m_mouseJoint);
@@ -295,16 +365,18 @@ void Test::Step(Settings& settings)
 	}
 
 	uint32 flags = 0;
-	flags += settings.m_drawShapes * b2Draw::e_shapeBit;
-	flags += settings.m_drawJoints * b2Draw::e_jointBit;
-	flags += settings.m_drawAABBs * b2Draw::e_aabbBit;
+	flags += settings.m_drawShapes			* b2Draw::e_shapeBit;
+	flags += settings.m_drawJoints			* b2Draw::e_jointBit;
+	flags += settings.m_drawAABBs			* b2Draw::e_aabbBit;
 	flags += settings.m_drawCOMs * b2Draw::e_centerOfMassBit;
+	flags += b2Draw::e_particleBit;
 	g_debugDraw.SetFlags(flags);
 
 	m_world->SetAllowSleeping(settings.m_enableSleep);
 	m_world->SetWarmStarting(settings.m_enableWarmStarting);
 	m_world->SetContinuousPhysics(settings.m_enableContinuous);
 	m_world->SetSubStepping(settings.m_enableSubStepping);
+	m_particleSystem->SetStrictContactCheck(settings.m_strictContacts);
 
 	m_pointCount = 0;
 
@@ -326,6 +398,13 @@ void Test::Step(Settings& settings)
 		g_debugDraw.DrawString(5, m_textLine, "bodies/contacts/joints = %d/%d/%d", bodyCount, contactCount, jointCount);
 		m_textLine += m_textIncrement;
 
+		int32 particleCount = m_particleSystem->GetParticleCount();
+		int32 groupCount = m_particleSystem->GetParticleGroupCount();
+		int32 pairCount = m_particleSystem->GetPairCount();
+		int32 triadCount = m_particleSystem->GetTriadCount();
+		g_debugDraw.DrawString(5, m_textLine, "particles/groups/pairs/triads = %d/%d/%d/%d", particleCount, groupCount, pairCount, triadCount);
+		m_textLine += m_textIncrement;
+		
 		int32 proxyCount = m_world->GetProxyCount();
 		int32 height = m_world->GetTreeHeight();
 		int32 balance = m_world->GetTreeBalance();
@@ -391,6 +470,19 @@ void Test::Step(Settings& settings)
 		m_textLine += m_textIncrement;
 		g_debugDraw.DrawString(5, m_textLine, "broad-phase [ave] (max) = %5.2f [%6.2f] (%6.2f)", p.broadphase, aveProfile.broadphase, m_maxProfile.broadphase);
 		m_textLine += m_textIncrement;
+	}
+
+	if (m_mouseTracing && !m_mouseJoint)
+	{
+		b2CircleShape shape;
+		shape.m_p = m_mouseWorld;
+		shape.m_radius = 2.0f;
+		QueryCallbackParticles callback(m_particleSystem, &shape, b2Vec2(0.0f, 0.0f));
+		b2AABB aabb;
+		b2Transform xf;
+		xf.SetIdentity();
+		shape.ComputeAABB(&aabb, xf, 0);
+		m_world->QueryAABB(&callback, aabb);
 	}
 
 	if (m_bombSpawning)

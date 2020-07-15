@@ -149,7 +149,7 @@ static void sPrintLog(GLuint object)
 static GLuint sCreateShaderFromString(const char* source, GLenum type)
 {
 	GLuint res = glCreateShader(type);
-	const char* sources[] = { source };
+	const char* sources[] = {source};
 	glShaderSource(res, 1, sources, NULL);
 	glCompileShader(res);
 	GLint compile_ok = GL_FALSE;
@@ -317,6 +317,7 @@ struct GLRenderPoints
 	}
 
 	enum { e_maxVertices = 512 };
+
 	b2Vec2 m_vertices[e_maxVertices];
 	b2Color m_colors[e_maxVertices];
 	float m_sizes[e_maxVertices];
@@ -349,7 +350,7 @@ struct GLRenderLines
 			"	gl_Position = projectionMatrix * vec4(v_position, 0.0f, 1.0f);\n"
 			"}\n";
 
-		const char* fs = \
+		const char* fs =
 			"#version 330\n"
 			"in vec4 f_color;\n"
 			"out vec4 color;\n"
@@ -578,6 +579,7 @@ struct GLRenderTriangles
 	}
 
 	enum { e_maxVertices = 3 * 512 };
+
 	b2Vec2 m_vertices[e_maxVertices];
 	b2Color m_colors[e_maxVertices];
 
@@ -738,6 +740,23 @@ void DebugDraw::DrawSolidCircle(const b2Vec2& center, float radius, const b2Vec2
 	m_lines->Vertex(p, color);
 }
 
+void DebugDraw::DrawParticles(const b2Vec2* centers, float radius, const b2ParticleColor* colors, int32 count)
+{
+	const b2ParticleColor defaultColor{0, 255, 0, 127};
+
+	for (int32 i = 0; i < count; ++i)
+	{
+		const b2ParticleColor& particleColor = colors ? colors[i] : defaultColor;
+		DrawSolidCircle(
+			centers[i],
+			radius,
+			b2Vec2(1.0f, 0.0f),
+			b2Color{
+				particleColor.r / 255.0f, particleColor.g / 255.0f, particleColor.b / 255.0f, particleColor.a / 255.0f
+			});
+	}
+}
+
 //
 void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 {
@@ -778,7 +797,11 @@ void DebugDraw::DrawString(int x, int y, const char* string, ...)
 
 	va_list arg;
 	va_start(arg, string);
-	ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
+	ImGui::Begin(
+		"Overlay",
+		NULL,
+		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
+		ImGuiWindowFlags_NoScrollbar);
 	ImGui::SetCursorPos(ImVec2(float(x), float(y)));
 	ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
 	ImGui::End();
@@ -792,7 +815,11 @@ void DebugDraw::DrawString(const b2Vec2& pw, const char* string, ...)
 
 	va_list arg;
 	va_start(arg, string);
-	ImGui::Begin("Overlay", NULL, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar);
+	ImGui::Begin(
+		"Overlay",
+		NULL,
+		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize |
+		ImGuiWindowFlags_NoScrollbar);
 	ImGui::SetCursorPos(ImVec2(ps.x, ps.y));
 	ImGui::TextColoredV(ImColor(230, 153, 153, 255), string, arg);
 	ImGui::End();

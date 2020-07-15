@@ -25,6 +25,7 @@
 
 #include "box2d/box2d.h"
 #include "draw.h"
+#include "particle_emitter.h"
 
 #include <stdlib.h>
 
@@ -99,6 +100,11 @@ public:
 	void SpawnBomb(const b2Vec2& worldPt);
 	void CompleteBombSpawn(const b2Vec2& p);
 
+
+	void ColorParticleGroup(
+		b2ParticleGroup* const group,
+		uint32 particlesPerColor);
+
 	// Let derived tests know that a joint was destroyed.
 	virtual void JointDestroyed(b2Joint* joint) { B2_NOT_USED(joint); }
 
@@ -126,15 +132,30 @@ protected:
 	DestructionListener m_destructionListener;
 	int32 m_textLine;
 	b2World* m_world;
+	b2ParticleSystem* m_particleSystem;
 	b2Body* m_bomb;
 	b2MouseJoint* m_mouseJoint;
 	b2Vec2 m_bombSpawnPoint;
 	bool m_bombSpawning;
+	bool m_mouseTracing;
 	b2Vec2 m_mouseWorld;
+	bool m_mouseDown;
 	int32 m_stepCount;
 	int32 m_textIncrement;
 	b2Profile m_maxProfile;
 	b2Profile m_totalProfile;
+
+	const b2ParticleColor k_ParticleColors[8] = {
+		b2ParticleColor(0xff, 0x00, 0x00, 0xff), // red
+		b2ParticleColor(0x00, 0xff, 0x00, 0xff), // green
+		b2ParticleColor(0x00, 0x00, 0xff, 0xff), // blue
+		b2ParticleColor(0xff, 0x8c, 0x00, 0xff), // orange
+		b2ParticleColor(0x00, 0xce, 0xd1, 0xff), // turquoise
+		b2ParticleColor(0xff, 0x00, 0xff, 0xff), // magenta
+		b2ParticleColor(0xff, 0xd7, 0x00, 0xff), // gold
+		b2ParticleColor(0x00, 0xff, 0xff, 0xff), // cyan
+	};
+	const uint32 k_ParticleColorsCount = B2_ARRAY_SIZE(k_ParticleColors);
 };
 
 typedef Test* TestCreateFcn();

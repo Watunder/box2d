@@ -408,6 +408,9 @@ private:
 	friend class b2WeldJoint;
 	friend class b2WheelJoint;
 
+	friend class b2ParticleSystem;
+	friend class b2ParticleGroup;
+
 	// m_flags
 	enum
 	{
@@ -430,7 +433,7 @@ private:
 	// It may lie, depending on the collideConnected flag.
 	bool ShouldCollide(const b2Body* other) const;
 
-	void Advance(float t);
+	void Advance(float alpha);
 
 	b2BodyType m_type;
 
@@ -439,6 +442,7 @@ private:
 	int32 m_islandIndex;
 
 	b2Transform m_xf;		// the body origin transform
+	b2Transform m_xf0;		// the previous transform for particle simulation
 	b2Sweep m_sweep;		// the swept motion for CCD
 
 	b2Vec2 m_linearVelocity;
